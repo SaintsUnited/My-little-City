@@ -21,4 +21,13 @@ public class GridManager : MonoBehaviour
             grid[x, z] = true;
         }
     }
+
+    public bool GetCellStatus(int x, int z)
+    {
+        if (x >= 0 && x < gridWidthX && z >= 0 && z < gridHeightZ)
+        {
+            return grid[x, z];
+        }
+        return false; //False if outside bounds
+    }
 }

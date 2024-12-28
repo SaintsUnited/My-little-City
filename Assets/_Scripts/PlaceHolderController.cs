@@ -2,19 +2,19 @@ using UnityEngine;
 
 public class PlaceHolderController : MonoBehaviour
 {
-    [SerializeField] private GameObject placeHolder; //Objecto que cambia de color
+    public GameObject placeHolderPrefab; //Objecto que cambia de color
     [SerializeField] private Color validColor = Color.green;
     [SerializeField] private Color invalidColor = Color.red;
-
+    
     public void SetPlaceHolderColor(bool isValid) //Cambia el color del objeto
     {
-        if (placeHolder == null)
+        if (!placeHolderPrefab)
         {
             Debug.LogError("PlaceHolder is not set");
             return;
         }
         
-        Renderer rend = placeHolder.GetComponent<Renderer>();
+        Renderer rend = placeHolderPrefab.GetComponent<Renderer>();
         if (rend != null)
         {
             Material instanceMaterial = rend.material;

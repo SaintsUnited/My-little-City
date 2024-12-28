@@ -3,11 +3,13 @@ using UnityEngine;
 public class BuildManager : MonoBehaviour
 {
     private GridManager gridManager; //reference to grid manager
-    private PlaceHolderController placeHolderController;
+    private PlaceHolderController placeHolderController; //reference to placeholdercontroller
     
     private Vector3 mousePosition;
 
-    private GameObject placeHolder;
+    public GameObject placeHolderPrefab;
+    private GameObject placeHolderInstance;
+    
     public GameObject objectToPlace;
 
     private void Start()
@@ -20,54 +22,59 @@ public class BuildManager : MonoBehaviour
                 Debug.LogError("GridManager not found!");
             }
         }
-
-        if (placeHolder == null)
-        {
-            Debug.LogError("PlaceHolder not found!");
-        }
-        
-        placeHolderController = placeHolder.GetComponent<PlaceHolderController>();
-        if (placeHolderController == null)
-        {
-            Debug.LogError("PlaceHolderController not found!");
-        }
+        objectToPlace = null;
     }
     private void Update()
     {
         UpdateMousePosition();
-        if (Input.GetMouseButtonDown(0)) //LMB clicked
+        if (objectToPlace&& Input.GetMouseButtonDown(0)) //LMB clicked
         {
             PlaceObject();
         }
     }
-    
-    void UpdateMousePosition() //Actualiza la posicion del mouse
+    void UpdateMousePosition() //Updates mouse position
     {
-        if (placeHolder == null || gridManager == null) return;
+        if (placeHolderInstance == null || gridManager == null) return;
         
-        Ray ray = (Camera.main.ScreenPointToRay(Input.mousePosition));
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         if (Physics.Raycast(ray, out RaycastHit hit))
         {
             Vector3 point = hit.point;
             int x = Mathf.FloorToInt(point.x / gridManager.cellSize);
             int z = Mathf.FloorToInt(point.z / gridManager.cellSize);
+            
             mousePosition = new Vector3(x * gridManager.cellSize, 0, z * gridManager.cellSize);
-            placeHolder.transform.position = mousePosition;
+            placeHolderInstance.transform.position = mousePosition;
 
-            if (x >= 0 && z >= 0 && x < gridManager.gridWidthX && z < gridManager.gridHeightZ)
+            if (gridManager.GetCellStatus(x, z))
             {
-                if (gridManager.IsCellAvailable(x, z))
-                {
-                    placeHolderController.SetPlaceHolderColor(true);
-                }
-                else
-                {
-                    placeHolderController.SetPlaceHolderColor(false);
-                }
+                placeHolderController.SetPlaceHolderColor(false); //Occupied
             }
-            else //si esta fuera de los limites, marca invalido.
+            else
             {
-                placeHolderController.SetPlaceHolderColor(false);
+                placeHolderController.SetPlaceHolderColor(true); //Available
+            }
+        }
+    }
+    public void SetObjectToPlace(GameObject newObject)
+    {
+        objectToPlace = newObject;
+        placeHolderPrefab = newObject;
+
+        if (placeHolderInstance != null)
+        {
+            Destroy(placeHolderInstance);
+        }
+
+        if (newObject != null)
+        {
+            placeHolderInstance = Instantiate(placeHolderPrefab, Vector3.zero, Quaternion.identity);
+            placeHolderController = placeHolderInstance.GetComponent<PlaceHolderController>();
+            placeHolderController.placeHolderPrefab = placeHolderPrefab;
+            
+            if (placeHolderController == null)
+            {
+                Debug.LogError("PlaceHolderController not found!");
             }
         }
     }
@@ -77,14 +84,28 @@ public class BuildManager : MonoBehaviour
         
         int x = Mathf.FloorToInt(Input.mousePosition.x / gridManager.cellSize);
         int z = Mathf.FloorToInt(Input.mousePosition.y / gridManager.cellSize);
+        
         if (gridManager.IsCellAvailable(x, z))
         {
             Instantiate(objectToPlace, mousePosition, Quaternion.identity);
             gridManager.OccupyCell(x, z);
+            ClearObjectToPlace();
+            Debug.Log("Object placed!");
         }
         else
         {
+            objectToPlace = null;
             Debug.Log("Cell is already occupied!");
+        }
+    }
+    private void ClearObjectToPlace()
+    {
+        objectToPlace = null;
+
+        if (placeHolderInstance != null)
+        {
+            Destroy(placeHolderInstance);
+            placeHolderInstance = null;
         }
     }
 }
