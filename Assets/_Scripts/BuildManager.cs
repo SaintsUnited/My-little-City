@@ -70,7 +70,6 @@ public class BuildManager : MonoBehaviour
         {
             placeHolderInstance = Instantiate(placeHolderPrefab, Vector3.zero, Quaternion.identity);
             placeHolderController = placeHolderInstance.GetComponent<PlaceHolderController>();
-            placeHolderController.placeHolderPrefab = placeHolderPrefab;
             
             if (placeHolderController == null)
             {
